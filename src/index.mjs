@@ -1,4 +1,6 @@
 import express, { request, response } from 'express';
+import { query, validationResult, body, matchedData, checkSchema } from 'express-validator';
+import { createUservalidationSchema } from './utils/validationSchema.mjs';
 
 const app = express();
 app.use( express.json() )
@@ -32,16 +34,21 @@ app.get( '/', ( request, response ) => {
     response.status( 201 ).send( { msg: 'Hello!' } );
 } );
 
-app.get( '/api/users', ( request, response ) => {
-    const { query: { filter, value } } = request;
-    if ( !filter && !value ) return response.send( mockUsers );
+app.get(
+    '/api/users',
+    query( "filter" ).isString().notEmpty().withMessage( "must not be empty" ).isLength( { min: 3, max: 10 } ).withMessage( "must be 3-10 characters" ),
+    ( request, response ) => {
+        const result = validationResult( request );
+        console.log( result );
+        const { query: { filter, value } } = request;
+        if ( !filter && !value ) return response.send( mockUsers );
 
-    if ( filter && value ) return response.send(
-        mockUsers.filter( ( user ) => user[ filter ].includes( value ) )
-    );
+        if ( filter && value ) return response.send(
+            mockUsers.filter( ( user ) => user[ filter ].includes( value ) )
+        );
 
-    response.status( 200 ).send( mockUsers );
-} );
+        response.status( 200 ).send( mockUsers );
+    } );
 
 app.get( '/api/users/:id', resolveIndexByUserID, ( request, response ) => {
 
@@ -55,13 +62,21 @@ app.get( '/api/products', ( request, response ) => {
     response.send( [ { id: 123, name: 'chicken Breast', price: 12.99 } ] )
 } )
 
-app.post( '/api/users', ( request, response ) => {
+app.post( '/api/users',
+    checkSchema( createUservalidationSchema ),
+    ( request, response ) => {
 
-    const { body } = request;
-    const newUser = { id: mockUsers[ mockUsers.length - 1 ].id + 1, ...body };
-    mockUsers.push( newUser );
-    return response.status( 201 ).send( newUser );
-} );
+        const result = validationResult( request );
+
+        if ( !result.isEmpty() ) {
+            return response.status( 400 ).send( { errors: result.array() } )
+        }
+        const data = matchedData( request );
+        // console.log( data );
+        const newUser = { id: mockUsers[ mockUsers.length - 1 ].id + 1, ...data };
+        mockUsers.push( newUser );
+        return response.status( 201 ).send( newUser );
+    } );
 
 // PUT REQUEST :
 app.put( '/api/users/:id', resolveIndexByUserID, ( request, response ) => {

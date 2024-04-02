@@ -66,6 +66,20 @@ app.put( '/api/users/:id', ( request, response ) => {
 
     mockUsers[ findUserIndex ] = { id: parseID, ...body };
     return response.sendStatus( 204 );
+} );
+//  PATCH REQUEST :
+app.patch( '/api/users/:id', ( request, response ) => {
+
+    const { body, params: { id } } = request;
+    const parseId = parseInt( id );
+
+    if ( isNaN( parseId ) ) return response.sendStatus( 400 );
+
+    const findUserIndex = mockUsers.findIndex( ( user ) => user.id === parseId );
+    if ( findUserIndex === -1 ) return response.sendStatus( 404 );
+
+    mockUsers[ findUserIndex ] = { ...mockUsers[ findUserIndex ], ...body };
+    return response.sendStatus( 204 );
 } )
 
 app.listen( PORT, () => {

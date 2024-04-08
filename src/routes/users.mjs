@@ -10,6 +10,13 @@ router.get(
     '/api/users',
     query( "filter" ).isString().notEmpty().withMessage( "must not be empty" ).isLength( { min: 3, max: 10 } ).withMessage( "must be 3-10 characters" ),
     ( request, response ) => {
+        request.sessionStore.get( request.session.id, ( err, data ) => {
+            if ( err ) {
+                console.log( err );
+                throw err;
+            }
+            console.log( data );
+        } )
         const result = validationResult( request );
         console.log( result );
         const { query: { filter, value } } = request;

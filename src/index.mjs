@@ -3,6 +3,8 @@ import cookieParser from 'cookie-parser';
 import routes from './routes/index.mjs';
 import session from 'express-session';
 import { mockUsers } from './utils/constants.mjs';
+import passport from 'passport';
+import "./strategies/local-strategy.mjs";
 
 const app = express();
 app.use( express.json() );
@@ -15,7 +17,15 @@ app.use( session( {
         maxAge: 60000 * 60,
     }
 } ) );
+app.use( passport.initialize() );
+app.use( passport.session() );
 app.use( routes );
+app.post(
+    '/api/auth',
+    passport.authenticate( 'local' ),
+    ( request, response ) => {
+        response.sendStatus( 200 );
+    } );
 
 const PORT = process.env.PORT || 3000;
 
@@ -38,13 +48,18 @@ app.post( '/api/auth', ( request, response ) => {
 } );
 
 app.get( '/api/auth/status', ( request, response ) => {
+    console.log( "inside /api/auth/status endpoint" );
+    console.log( request.user );
 
-    request.sessionStore.get( request.session.id, ( err, data ) => {
-        console.log( data );
-    } )
-    return request.session.user
-        ? response.status( 200 ).send( request.session.user )
+    return request.user
+        ? response.status( 200 ).send( request.user )
         : response.status( 401 ).send( { msg: "NOT AUTHENTICATED!" } );
+    // request.sessionStore.get( request.session.id, ( err, data ) => {
+    //     console.log( data );
+    // } )
+    // return request.session.user
+    //     ? response.status( 200 ).send( request.session.user )
+    //     : response.status( 401 ).send( { msg: "NOT AUTHENTICATED!" } );
 } );
 
 app.post( '/api/cart', ( request, response ) => {
@@ -67,7 +82,18 @@ app.get( '/api/cart', ( request, response ) => {
         return response.sendStatus( 401 );
 
     return response.status( 200 ).send( request.session.cart ?? [] );
-} )
+} );
+
+app.post( '/api/auth/logout', ( request, response ) => {
+    if ( !request.user )
+        return response.sendStatus( 401 );
+
+    request.logOut( ( err ) => {
+        if ( err )
+            return response.sendStatus( 401 );
+        response.sendStatus( 200 );
+    } )
+} );
 
 app.listen( PORT, () => {
     console.log( `Running on Port ${PORT} on ${new Date()}` )

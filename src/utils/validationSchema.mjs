@@ -28,5 +28,7 @@ export const createUservalidationSchema = {
         isString: {
             errorMessage: "displayName must be string"
         },
-    }
+    }, password: {
+        notEmpty: true,
+    },
 };

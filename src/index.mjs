@@ -4,9 +4,15 @@ import routes from './routes/index.mjs';
 import session from 'express-session';
 import { mockUsers } from './utils/constants.mjs';
 import passport from 'passport';
+import mongoose from 'mongoose';
 import "./strategies/local-strategy.mjs";
 
 const app = express();
+
+mongoose.connect( 'mongodb://localhost/express_tutorial' )
+    .then( () => console.log( "connected to database..." ) )
+    .catch( ( err ) => console.log( `Error : ${err}` ) );
+
 app.use( express.json() );
 app.use( cookieParser( "sivasecret" ) );
 app.use( session( {

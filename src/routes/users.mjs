@@ -3,7 +3,7 @@ import { query, validationResult, body, matchedData, checkSchema } from 'express
 import { mockUsers } from "../utils/constants.mjs";
 import { resolveIndexByUserID } from '../utils/middlewares.mjs';
 import { createUservalidationSchema } from "../utils/validationSchema.mjs";
-
+import { User } from "../mongoose/schemas/user.mjs";
 const router = Router();
 
 router.get(
@@ -36,21 +36,43 @@ router.get( '/api/users/:id', resolveIndexByUserID, ( request, response ) => {
     if ( !findUser ) return response.sendStatus( 404 );
     return response.send( findUser );
 } );
+// for local text db users:
+// router.post( '/api/users',
+//     checkSchema( createUservalidationSchema ),
+//     ( request, response ) => {
 
+//         const result = validationResult( request );
+
+//         if ( !result.isEmpty() ) {
+//             return response.status( 400 ).send( { errors: result.array() } )
+//         }
+//         const data = matchedData( request );
+//         // console.log( data );
+//         const newUser = { id: mockUsers[ mockUsers.length - 1 ].id + 1, ...data };
+//         mockUsers.push( newUser );
+//         return response.status( 201 ).send( newUser );
+//     } );
+
+// for MongoDB users:
 router.post( '/api/users',
     checkSchema( createUservalidationSchema ),
-    ( request, response ) => {
+    async ( request, response ) => {
 
         const result = validationResult( request );
 
-        if ( !result.isEmpty() ) {
-            return response.status( 400 ).send( { errors: result.array() } )
-        }
+        if ( !result.isEmpty() )
+            return response.status( 400 ).send( result.array() );
+
         const data = matchedData( request );
-        // console.log( data );
-        const newUser = { id: mockUsers[ mockUsers.length - 1 ].id + 1, ...data };
-        mockUsers.push( newUser );
-        return response.status( 201 ).send( newUser );
+
+        const newUser = new User( data );
+        try {
+            const saveUser = await newUser.save();
+            return response.status( 201 ).send( saveUser );
+        } catch ( error ) {
+            console.log( error );
+            return response.sendStatus( 400 );
+        }
     } );
 
 // PUT REQUEST :

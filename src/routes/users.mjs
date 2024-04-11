@@ -4,6 +4,7 @@ import { mockUsers } from "../utils/constants.mjs";
 import { resolveIndexByUserID } from '../utils/middlewares.mjs';
 import { createUservalidationSchema } from "../utils/validationSchema.mjs";
 import { User } from "../mongoose/schemas/user.mjs";
+import { hashPassword } from "../utils/helpers.mjs";
 const router = Router();
 
 router.get(
@@ -64,6 +65,7 @@ router.post( '/api/users',
             return response.status( 400 ).send( result.array() );
 
         const data = matchedData( request );
+        data.password = hashPassword( data.password );
 
         const newUser = new User( data );
         try {

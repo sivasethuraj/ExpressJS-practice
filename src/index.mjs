@@ -6,6 +6,7 @@ import { mockUsers } from './utils/constants.mjs';
 import passport from 'passport';
 import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
+import { config } from 'dotenv';
 // import "./strategies/local-strategy.mjs";
 import "./strategies/github-strategy.mjs";
 
@@ -121,7 +122,4 @@ app.listen( PORT, () => {
     console.log( `Running on Port ${PORT} on ${new Date()}` )
 } )
 
-
-// CLIENT_ID = 8989df9a2e37993ecb0f
-// CLIENT_SECRET = fe3bdf201550510d05e2cf33121e3faf9bc92827
 // REDIRECT_URL = http://localhost:3000/api/auth/github/redirect 
